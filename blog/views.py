@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.core import serializers
@@ -40,14 +41,32 @@ class BlogContact(ListView):
     model = Article
 
 
-class BlogSingle(ListView):
+class BlogSingle(DetailView):
     template_name = 'blog/single.html'
-    context_object_name = 'work_list'
+    context_object_name = 'article'
     model = Article
+
+    # def get_queryset(self):
+    #     show_id = self.kwargs['id']
+    #     value = Article.objects.filter(pk=show_id)
+    #     print('value', value)
+    #     return value
+
+    # def get_context_data(self, **kwargs):
+    #     context = super(BlogSingle, self).get_context_data(**kwargs)
+    #     print('self', self)
+    #     # context['article'] = Article.objects.filter(pk=show)
+
+    def get_object(self, queryset=None):
+        print('self', self.kwargs.get('id'))
+        return Article.objects.get(pk=self.kwargs.get('id'))
 
 
 def get_article_list(request):
     page = int(request.GET['page'])
-    article_list = serializers.serialize("json", Article.objects.all()[page:page + 5])
-    print(article_list)
-    return JsonResponse(article_list, safe=False)
+    article_list = Article.objects.all()[page:page + 5]
+
+    article_arr = list(article_list.values())
+
+    print('article_arr', article_arr[0])
+    return JsonResponse(article_arr, safe=False)
