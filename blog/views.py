@@ -5,9 +5,12 @@ from blog.models import Article
 from blog.models import Comment
 from blog.models import User
 
+from blog.lib import Lib
+
 from django.core import serializers
 
 import json
+import time
 
 
 def get_single(request):
@@ -70,6 +73,7 @@ def get_article_commit(request):
         return JsonResponse(list(commit_list.values()), safe=False)
 
 
+# 注册
 def register(request):
     if request.method == 'POST':
         try:
@@ -81,13 +85,14 @@ def register(request):
 
         user_list = User.objects.filter(name=name)
         if user_list.exists():
-            return HttpResponse('注册名称重复，请更改用户名')
+            return JsonResponse('注册名称重复，请更改用户名', safe=False)
 
         user = User(name=name, password=password)
         user.save()
-        return HttpResponse('注册成功')
+        return JsonResponse('注册成功', safe=False)
 
 
+# 用户名密码登录
 def sign(request):
     if request.method == 'POST':
         try:
@@ -97,12 +102,55 @@ def sign(request):
             print('e', e)
             return JsonResponse('参数不正确', safe=False)
 
-        user = User.objects.get(name=name)
+        try:
+            user = User.objects.get(name=name)
+        except Exception as e:
+            print('e', e)
+            return JsonResponse('该用户未注册，请注册后登录', safe=False)
+
         if password == user.password:
-            response = HttpResponse('登录成功')
-            response.set_cookie('login_sequence', 'login_sequence')
-            response.set_cookie('token', 'token')
+
+            string = name + str(time.time())
+            login_sequence = Lib.md5encode(string)
+            token = Lib.md5encode(str(time.time()))
+
+            user.login_sequence = login_sequence
+            user.token = token
+            user.save()
+
+            response = JsonResponse('登录成功', safe=False)
+            response.set_cookie('name', name, 9999999)
+            response.set_cookie('login_sequence', login_sequence, 2592000)
+            response.set_cookie('token', token)
             return response
         else:
-            response = HttpResponse('登录失败')
+            response = JsonResponse('登录失败', safe=False)
+            return response
+
+
+# 判断cookie是否登录
+def is_login(request):
+    if request.method == 'GET':
+        try:
+            name = request.COOKIES['name']
+            login_sequence = request.COOKIES['login_sequence']
+            token = request.COOKIES['token']
+        except Exception as e:
+            print('is_login_e', e)
+            return JsonResponse('请重新登录', safe=False)
+
+        try:
+            user = User.objects.get(name=name)
+        except Exception as e:
+            print('e', e)
+            return JsonResponse('用户不存在，请重新登录或注册', safe=False)
+
+        if user.login_sequence == login_sequence and user.token == token:
+            token = Lib.md5encode(str(time.time()))
+            response = JsonResponse('登录成功', safe=False)
+            response.set_cookie('token', token)
+
+            user.token = token
+            user.save()
+
             return response

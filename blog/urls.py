@@ -9,5 +9,6 @@ urlpatterns = [
   url(r'^article_commit_create$', views.article_commit_create, name='article_create'),
   url(r'^get_article_commit$', views.get_article_commit, name='article_create'),
   url(r'^register$', views.register, name='register'),
-  url(r'^sign$', views.sign, name='sign')
+  url(r'^sign$', views.sign, name='sign'),
+  url(r'^is_login$', views.is_login, name='is_login')
 ]
