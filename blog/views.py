@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.http import HttpResponse
+from django.utils.encoding import smart_text
 
 from blog.models import Article
 from blog.models import Comment
@@ -30,7 +31,6 @@ def get_article_list(request):
             article_list = Article.objects.filter(category=category_id)[0: page + 5]
 
         response = JsonResponse(list(article_list.values()), safe=False)
-        # response.set_cookie('zuoguangcheng', 'zuoguangcheng')
 
         return response
 
@@ -119,7 +119,7 @@ def sign(request):
             user.save()
 
             response = JsonResponse('登录成功', safe=False)
-            response.set_cookie('name', name, 9999999)
+            response.set_cookie('name', Lib.base64encode(name), 2592000)
             response.set_cookie('login_sequence', login_sequence, 2592000)
             response.set_cookie('token', token)
             return response
@@ -132,25 +132,27 @@ def sign(request):
 def is_login(request):
     if request.method == 'GET':
         try:
-            name = request.COOKIES['name']
+            name = Lib.base64decode(request.COOKIES['name'])
             login_sequence = request.COOKIES['login_sequence']
             token = request.COOKIES['token']
         except Exception as e:
             print('is_login_e', e)
-            return JsonResponse('请重新登录', safe=False)
+            return JsonResponse({'code': 0, 'msg': '请重新登录'}, safe=False)
 
         try:
             user = User.objects.get(name=name)
         except Exception as e:
             print('e', e)
-            return JsonResponse('用户不存在，请重新登录或注册', safe=False)
+            return JsonResponse({'code': 0, 'msg': '用户不存在，请重新登录或注册'}, safe=False)
 
         if user.login_sequence == login_sequence and user.token == token:
             token = Lib.md5encode(str(time.time()))
-            response = JsonResponse('登录成功', safe=False)
+            response = JsonResponse({'code': 1, 'msg': '登录成功'}, safe=False)
             response.set_cookie('token', token)
 
             user.token = token
             user.save()
 
             return response
+        else:
+            return JsonResponse({'code': 0, 'msg': '请重新登录'}, safe=False)
