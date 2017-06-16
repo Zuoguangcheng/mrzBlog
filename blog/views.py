@@ -40,9 +40,10 @@ def article_create(request):
     if request.method == 'POST':
         title = request.POST['title']
         content = request.POST['content']
+        markdown = request.POST['markdown']
         category = request.POST['category']
 
-        article = Article(title=title, content=content, category=category)
+        article = Article(title=title, content=content, markdown=markdown, category=category)
         article.save()
 
         return JsonResponse([], safe=False)
@@ -168,8 +169,12 @@ def up_pic(request):
         return JsonResponse({'code': 0, 'msg': '失败'}, safe=False)
 
     print('pic', pic)
-    print('pic', pic.read())
-    # print('pic', base64.b64decode(pic))
     # print('pic', pic.read())
+
+    path = 'me.png'
+    data = pic.read()
+
+    with open(path, 'wb') as file:
+        file.write(data)
 
     return JsonResponse({'code': 1, 'msg': '陈宫'}, safe=False)
