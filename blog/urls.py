@@ -10,5 +10,6 @@ urlpatterns = [
   url(r'^get_article_commit$', views.get_article_commit, name='article_create'),
   url(r'^register$', views.register, name='register'),
   url(r'^sign$', views.sign, name='sign'),
-  url(r'^is_login$', views.is_login, name='is_login')
+  url(r'^is_login$', views.is_login, name='is_login'),
+  url(r'^up_pic$', views.up_pic, name='up_pic')
 ]

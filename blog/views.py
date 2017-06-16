@@ -12,6 +12,7 @@ from django.core import serializers
 
 import json
 import time
+import base64
 
 
 def get_single(request):
@@ -156,3 +157,19 @@ def is_login(request):
             return response
         else:
             return JsonResponse({'code': 0, 'msg': '请重新登录'}, safe=False)
+
+
+def up_pic(request):
+    try:
+        pic = request.FILES['file']
+    except Exception as e:
+        print('e', e)
+        print('request', request)
+        return JsonResponse({'code': 0, 'msg': '失败'}, safe=False)
+
+    print('pic', pic)
+    print('pic', pic.read())
+    # print('pic', base64.b64decode(pic))
+    # print('pic', pic.read())
+
+    return JsonResponse({'code': 1, 'msg': '陈宫'}, safe=False)
