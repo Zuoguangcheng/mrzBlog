@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.http import HttpResponse
-from django.utils.encoding import smart_text
+import django.utils.timezone as timezone
 
 from blog.models import Article
 from blog.models import Comment
@@ -12,6 +12,7 @@ from django.core import serializers
 
 import json
 import time
+from datetime import datetime, timedelta
 import base64
 
 
@@ -25,15 +26,39 @@ def get_article_list(request):
 
         page = int(request.GET['page'])
         category_id = request.GET['category_id']
+        month = request.GET['month']
 
-        article_list = Article.objects.all()[0: page + 5]
+        article_list = Article.objects.all()
+
+        if month:
+            start_month_time = datetime.strptime(month, "%Y-%m")
+            end_month_time = datetime(start_month_time.year, (start_month_time.month + 1), start_month_time.day)
+            article_list = article_list.filter(update_time__range=(start_month_time, end_month_time))
 
         if category_id:
-            article_list = Article.objects.filter(category=category_id)[0: page + 5]
+            article_list = article_list.filter(category=category_id)
 
-        response = JsonResponse(list(article_list.values()), safe=False)
+        response = JsonResponse(list(article_list[0: page + 5].values()), safe=False)
 
         return response
+
+
+def get_article_recent(request):
+    if request.method == 'GET':
+        article_list = Article.objects.all().order_by('-update_time')[0:3]
+        return JsonResponse(list(article_list.values()), safe=False)
+
+
+def get_month(request):
+    if request.method == 'GET':
+        month = Article.objects.all().values('pub_date')
+        month_set = set()
+
+        for item in month:
+            item['pub_date'] = item['pub_date'].strftime('%Y-%m')
+            month_set.add(item['pub_date'])
+
+        return JsonResponse(list(month_set), safe=False)
 
 
 def article_create(request):
@@ -47,6 +72,21 @@ def article_create(request):
         article.save()
 
         return JsonResponse([], safe=False)
+
+
+def article_edit(request):
+    if request.method == 'POST':
+        id = request.POST['id']
+        title = request.POST['title']
+        content = request.POST['content']
+        markdown = request.POST['markdown']
+        category = request.POST['category']
+        article = Article.objects.filter(pk=id)
+        article.update(title=title, content=content, markdown=markdown, category=category, update_time=timezone.now())
+
+        return JsonResponse([], safe=False)
+    else:
+        return JsonResponse('请求错误', safe=False)
 
 
 def article_commit_create(request):
