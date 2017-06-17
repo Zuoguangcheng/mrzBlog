@@ -123,15 +123,15 @@ def register(request):
             password = request.POST['password']
         except Exception as e:
             print('e', e)
-            return JsonResponse('参数不正确', safe=False)
+            return JsonResponse({'code': 0, 'msg': '参数不正确'}, safe=False)
 
         user_list = User.objects.filter(name=name)
         if user_list.exists():
-            return JsonResponse('注册名称重复，请更改用户名', safe=False)
+            return JsonResponse({'code': 0, 'msg': '注册名称重复，请更改用户名'}, safe=False)
 
         user = User(name=name, password=password)
         user.save()
-        return JsonResponse('注册成功', safe=False)
+        return JsonResponse({'code': 1, 'msg': '注册成功，请登录'}, safe=False)
 
 
 # 用户名密码登录
@@ -142,13 +142,13 @@ def sign(request):
             password = request.POST['password']
         except Exception as e:
             print('e', e)
-            return JsonResponse('参数不正确', safe=False)
+            return JsonResponse({'code': 0, 'msg': '参数不正确'}, safe=False)
 
         try:
             user = User.objects.get(name=name)
         except Exception as e:
             print('e', e)
-            return JsonResponse('该用户未注册，请注册后登录', safe=False)
+            return JsonResponse({'code': 0, 'msg': '该用户未注册，请注册后登录'}, safe=False)
 
         if password == user.password:
 
@@ -160,13 +160,13 @@ def sign(request):
             user.token = token
             user.save()
 
-            response = JsonResponse('登录成功', safe=False)
+            response = JsonResponse({'code': 1, 'msg': '登录成功'}, safe=False)
             response.set_cookie('name', Lib.base64encode(name), 2592000)
             response.set_cookie('login_sequence', login_sequence, 2592000)
             response.set_cookie('token', token)
             return response
         else:
-            response = JsonResponse('登录失败', safe=False)
+            response = JsonResponse({'code': 0, 'msg': '登录失败'}, safe=False)
             return response
 
 
@@ -217,4 +217,4 @@ def up_pic(request):
     with open(path, 'wb') as file:
         file.write(data)
 
-    return JsonResponse({'code': 1, 'msg': '陈宫'}, safe=False)
+    return JsonResponse({'code': 1, 'msg': '成功'}, safe=False)
