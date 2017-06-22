@@ -26,6 +26,8 @@ class Comment(models.Model):
 class User(models.Model):
     name = models.CharField(u'用户名', max_length=128)
     password = models.CharField(u'密码', max_length=20)
+    email = models.CharField(u'邮箱', max_length=50)
+
     login_sequence = models.CharField(u'登录序列', max_length=256)
     token = models.CharField(u'token', max_length=256)
 

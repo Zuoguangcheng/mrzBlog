@@ -16,6 +16,17 @@ from datetime import datetime, timedelta
 import base64
 
 
+def log(func):
+    def _log(*args, **kwargs):
+        print('args', args[0].method)
+        print('args', json.dumps(args[0].GET))
+        print('args', json.dumps(args[0].POST))
+        return func(*args, **kwargs)
+
+    return _log
+
+
+@log
 def get_single(request):
     article = list(Article.objects.filter(pk=int(request.GET['id'])).values())
     return JsonResponse(article, safe=False)
@@ -49,6 +60,7 @@ def get_article_recent(request):
         return JsonResponse(list(article_list.values()), safe=False)
 
 
+@log
 def get_month(request):
     if request.method == 'GET':
         month = Article.objects.all().values('pub_date')
@@ -103,6 +115,7 @@ def article_commit_create(request):
         return JsonResponse([], safe=False)
 
 
+@log
 def get_article_commit(request):
     if request.method == 'GET':
         try:
